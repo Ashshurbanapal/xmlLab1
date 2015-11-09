@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>Lab1</title>
+		<script src="xmlLab.js"></script>
+		<link rel="stylesheet" type="text/css" href="xmlLabCSS.css">
+	</head>
+	<body onload="parseXML()">
+		<table id="Data" border="1" cellspacing="1" cellpadding="1">
+			<tr><td><b>Id</b></td><td><b>Name</b></td><td><b>Description</b></td><td><b>Value</b></td><td></td></tr>
+		</table>
+		<p>
+        <input type="text" placeholder="Id" id="newId">
+		<input type="text" placeholder="Name" id="newName">
+		<input type="text" placeholder="Description" id="newDescription">	
+		<input type="text" placeholder="Value" id="newValue" >	
+		<select size="1" id="newType" onchange='changeTypeOfNewValueField(this)'>
+    	<option value="System.String">String</option>
+    	<option value="System.Int32">Int32</option>
+    	<option value="System.Boolean">Boolean</option>
+   		</select>
+   		<input type="button" value=" Add row " onclick="addRow()">
+   		</p>
+		<p><input type="button" value=" Generate XML " onclick="generateXML( 'output.xml', 'text/plain')">
+		<a href="" style="display:none" id="download_link">output.xml</a></p>
+	</body>
+</html>

@@ -1,28 +1,32 @@
 ﻿<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8"/>
-		<title>Lab1</title>
-		<script src="xmlLab.js"></script>
-		<link rel="stylesheet" type="text/css" href="xmlLabCSS.css">
-	</head>
-	<body onload="parseXML()">
-		<table id="Data" border="0" cellspacing="1" cellpadding="1">
-			<tr><td><b>Id</b></td><td><b>Name</b></td><td><b>Description</b></td><td><b>Value</b></td><td></td></tr>
-		</table>
-		<p>
-        <input type="text" placeholder="Id" id="newId">
-		<input type="text" placeholder="Name" id="newName">
-		<input type="text" placeholder="Description" id="newDescription">	
-		<input type="text" placeholder="Value" id="newValue" >	
-		<select size="1" id="newType" onchange='changeTypeOfNewValueField(this)'>
-    	<option value="System.String">String</option>
-    	<option value="System.Int32">Int32</option>
-    	<option value="System.Boolean">Boolean</option>
-   		</select>
-   		<input type="button" value=" Add row " onclick="addRow()">
-   		</p>
-		<p><input type="button" value=" Generate XML " onclick="generateXML( 'output.xml', 'text/plain')">
-		<a href="" style="display:none" id="download_link">output.xml</a></p>
-	</body>
+<head>
+    <title></title>
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <link rel="stylesheet" type="text/css" href="xmlLabCSS.css" />
+</head>
+<body>
+    <input class="button" type=button onclick='saveParameters()' value="Save xml" />
+    <a href="" class="hidden" id="linkToOutputXML" hidden="hidden"></a>
+    <input class="button" type=button onclick='showParameterSettings()' value="Add" />
+    <script src='xmlLab.js' type='text/javascript'></script>
+    <div id="newParameter">
+        <label class="parameterSettings">ID: </label>
+        <input class="parameterSettings" id="parameterID" type="text" /> <br />
+        <label class="parameterSettings">Name: </label>
+        <input class="parameterSettings" id="parameterName" type="text" /> <br />
+        <label class="parameterSettings">Description: </label>
+        <input class="parameterSettings" id="parameterDescription" type="text" /> <br />
+        <label class="parameterSettings">Type: </label>
+        <select class="parameterSettings" id="parameterType" onchange="setInputType()">
+            <option selected>String</option>
+            <option>Integer</option>
+            <option>Boolean</option>
+        </select> <br />
+        <label class="parameterSettings">Value: </label>
+        <input class="parameterSettings" id="parameterValue" type="text" /> <br />
+        <input class="button" type=button onclick='cancelNewParameter()' value="Cancel" />
+        <input class="button" type=button onclick='showNewParameter()' value="Save" />
+    </div>
+</body>
 </html>

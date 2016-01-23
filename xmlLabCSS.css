@@ -1,9 +1,16 @@
-#newParameter {
-    display: none;
+#NewParameter {
     margin-bottom: 10px;
     margin-left: 10px;
     padding: 10px;
     border: 2px double black;
+}
+
+#DeleteButton {
+    width: 100px;
+    margin-top: 10px;
+    margin-left: 20px;
+    margin-bottom: 10px;
+    font-size: 14px;
 }
 
 .button {
@@ -14,15 +21,7 @@
     font-size: 14px;
 }
 
-.deleteButton {
-    width: 100px;
-    margin-top: 10px;
-    margin-left: 20px;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.parameter {
+#Content {
     margin-bottom: 10px;
     margin-left: 10px;
     padding: 10px;

@@ -1,178 +1,275 @@
+var xmlFile;
 
-/**
- * Выводит на экран параметры настройки, описанные в файле input.xml.
- */
-document.body.onload = function () {
+window.onload = function ()
+{
+    document.getElementById("NewType").value = 0;
+    document.getElementById("NewValue").value = "";
     var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "input.xml", false);
-    xmlhttp.send();
-    var xmlDoc = xmlhttp.responseXML;
-    var controls = xmlDoc.getElementsByTagName("Parameter");
-    for (var i = 0; i < controls.length; i++) {
-        addDivForParameter(controls[i].getElementsByTagName("Id")[0].firstChild.nodeValue,
-               controls[i].getElementsByTagName("Name")[0].firstChild.nodeValue,
-               controls[i].getElementsByTagName("Description")[0].firstChild.nodeValue,
-               controls[i].getElementsByTagName("Type")[0].firstChild.nodeValue,
-               controls[i].getElementsByTagName("Value")[0].firstChild.nodeValue);
+    xmlhttp.open("GET", "Input.xml", false);
+    xmlhttp.send();xmlParser
+    xmlFile = xmlhttp.responseXML;
+    if (xmlFile)
+    {
+        xmlParser(xmlFile);
     }
-};
+}
 
-/**
- * Добавляет элемент div, который отображает информацию о параметре настройки.
- * @param {type} parameterName название параметра настройки
- * @param {type} parameterDescription описание параметра настройки
- * @param {type} parameterType тип параметра настройки.
- *  Допустимые типы: System.String, System.Int32, System.Boolean
- * @param {type} parameterValue значение параметра настройки, соответствующее
- *  указанному типу
- */
-function addDivForParameter(parameterID, parameterName, parameterDescription, parameterType, parameterValue) {
-    var div = createDiv("parameter", "");
-    div.appendChild(createDiv("parameterName", parameterName));
-    div.appendChild(createDiv("parameterID", parameterID));
-    div.appendChild(createDiv("parameterDescription", parameterDescription));
-    var input = document.createElement('input');
-    if (parameterType === "System.String") {
-        input.type = "text";
-        input.value = parameterValue;
-    } else if (parameterType === "System.Int32") {
-        input.type = "text";
-        input.value = parameterValue;
-        input.oninput = validateNumber;
-        input.onblur = checkNumberAfterInput;
-    } else if (parameterType === "System.Boolean") {
-        input.type = "checkbox";
-        input.checked = (parameterValue.toLowerCase() === 'true');
+function printParam( element )
+{
+    var html_element = document.createElement("p");
+    html_element.setAttribute("class", "Parameter");
+    html_element.setAttribute("id", element.id);
+    html_element.setAttribute("Name", element.name);
+    html_element.setAttribute("Description", element.description);
+    html_element.setAttribute("type", element.type);
+    html_element.setAttribute("value", element.value);
+    document.getElementById("Content").appendChild(html_element);
+    var form_type = getFormValue(element.type, element.value);
+    var string_to_show = "<input class=\"button\" type=\"button\" id=\"DeleteButton\" onclick=\'deleteParam(this.parentNode)\' value=\"delete\" />";
+    string_to_show += "     Id: ".bold() + element.id + "; Name: ".bold() + element.name
+                            + "; Description: ".bold() + element.description + form_type + "</br>";
+    html_element.innerHTML = string_to_show;
+}
+function getFormValue( type, value )
+{
+    var string_to_return = "; Type: ".bold() + type + "; Value: ".bold();
+    switch (type)
+    {
+        case 'String':
+            if (value === "")
+                return string_to_return + "<input oninput=\'setElementValue(this, this.parentNode, false)\' type=\'text\' />";
+            return string_to_return + "<input oninput=\'setElementValue(this, this.parentNode, false)\' type=\'text\' value=\'" + value + "\' />";
+        case 'Int32':
+            return string_to_return + 
+			"<input onkeyup=\'checkData(element.value)\' oninput=\'setElementValue(this, this.parentNode, true, this)\' onblur=\'checkNumberAfterInput (this)\' type=\'text\' value=" + value + " />";
+        case 'Boolean':
+            var checkbox = "";
+            if (value === "True" )
+                checkbox = "checked";
+            return string_to_return + "<input oninput=\'setElementValue(this, this.parentNode, false)\' type=\'checkbox\'" + checkbox + "/>";
     }
-    div.appendChild(input);
-    var deleteButton = document.createElement('input');
-    deleteButton.type = "button";
-    deleteButton.value = "Delete";
-    deleteButton.onclick = deleteParameter;
-    deleteButton.className = "deleteButton";
-    div.appendChild(deleteButton);
-    document.body.appendChild(div);
-};
+}
 
-/**
- * Удаляет выбранный элемент div с настройками параметра.
- */
-function deleteParameter() {
-    this.parentNode.parentNode.removeChild(this.parentNode);
-};
-
-/**
- * Создает элемент div.
- * @param {type} classCSS класс элемента
- * @param {type} text текст внутри элемента
- * @returns {createDiv.div} новый элемент div, у которого нет родителя
- */
-function createDiv(classCSS, text) {
-    var div = document.createElement('div');
-    div.className = classCSS;
-    div.innerHTML = text;
-    return div;
-};
-
-/**
- * Сохраняет список параметров в файле output.xml.
- */
-function saveParameters() {
-    var outputXML = createOutputXML();
-    var link = document.getElementById("linkToOutputXML");
-    var file = new Blob([outputXML], { type: 'text/plain' });
-    link.href = URL.createObjectURL(file);
-    link.download = "output.xml";
-    document.getElementById('linkToOutputXML').click();
-};
-
-/**
- * Создает новый файл со всеми настройками параметров.
- */
-function createOutputXML() {
-    var parameters = document.getElementsByClassName("parameter");
-    var xmlDoc = "<?xml version=\"1.0\"?>\n" + "<Parameters>\n";
-    for (var i = 0; i < parameters.length; i++) {
-        xmlDoc += "<Parameter>\n";
-        xmlDoc += "<Id>" + parameters[i].firstChild.innerHTML + "</Id>\n";
-        xmlDoc += "<Name>" + parameters[i].childNodes[1].innerHTML + "</Name>\n";
-        xmlDoc += "<Description>" + parameters[i].childNodes[2].innerHTML + "</Description>\n";
-        xmlDoc += "<Type>System." + getParameterType(parameters[i].childNodes[3]) + "</Type>\n";
-        xmlDoc += "<Value>" + parameters[i].childNodes[3].value + "</Value>\n</Parameter>\n";
+function xmlParser( xml_doc )
+{
+    var params = xml_doc.getElementsByTagName("Parameter");
+    for (var i = 0; i < params.length; i++)
+    {
+        var element = new Object();
+        element.id = params[i].getElementsByTagName("Id")[0].firstChild.nodeValue;
+        element.name = params[i].getElementsByTagName("Name")[0].firstChild.nodeValue;
+        element.description = params[i].getElementsByTagName("Description")[0].firstChild.nodeValue;
+        element.type = params[i].getElementsByTagName("Type")[0].firstChild.nodeValue;
+        element.type = element.type.replace('System.', '');
+        element.value = params[i].getElementsByTagName("Value")[0].firstChild.nodeValue;
+        printParam(element);
     }
-    xmlDoc += "</Parameters>";
-    return xmlDoc;
-};
-
-/**
- * Определяет тип вводимого значения для параметра.
- */
-function getParameterType(input) {
-    if (input.type === "checkbox")
-        return "Boolean";
-    if (input.oninput === null)
-        return "String";
-    return "Int32";
-};
-
-/**
- * Показывает div-элемент с настройками параметра.
- */
-function showParameterSettings() {
-    document.getElementById("newParameter").style.display = "block";
-};
-
-/**
- * Читает настройки параметра, создает и отображает по ним новый параметр.
- */
-function showNewParameter() {
-    var parameterID = document.getElementById("parameterID").value;
-    var parameterName = document.getElementById("parameterName").value;
-    var parameterDescription = document.getElementById("parameterDescription").value;
-    var types = ["System.String", "System.Int32", "System.Boolean"];
-    var parameterType = types[document.getElementById("parameterType").selectedIndex];
-    var inputWithParameterValue = document.getElementById("parameterValue");
-    var parameterValue;
-    if (inputWithParameterValue.type === "checkbox")
-        parameterValue = inputWithParameterValue.checked.toString();
-    else
-        parameterValue = inputWithParameterValue.value;
-    addDivForParameter(parameterID, parameterName, parameterDescription, parameterType, parameterValue);
-    document.getElementById("newParameter").style.display = "none";
-};
-
-/**
- * Скрывает div-элемент с настройками параметра.
- */
-function cancelNewParameter() {
-    document.getElementById("newParameter").style.display = "none";
-};
-
-/**
- * Изменяет поле ввода значения параметра в зависимости от типа параметра.
- */
-function setInputType() {
-    var combobox = document.getElementById("parameterType");
-    var input = document.getElementById("parameterValue");
-    input.oninput = null;
-    if (combobox.selectedIndex === 0)
-        input.type = "text";
-    else if (combobox.selectedIndex === 1) {
-        input.type = "text";
-        input.oninput = validateNumber;
-        input.onblur = checkNumberAfterInput;
+}
+function saveParam()
+{
+    var form = document.getElementById("NewParameter")
+    var element = new Object();
+    element.id = document.getElementById("NewId").value;
+    element.name = document.getElementById("NewName").value;
+    element.description = document.getElementById("NewDescription").value;
+    element.type = getTypeFromCombobox();
+    element.value = getNewValue(element.type);
+    if (checkData(element))
+    return;
+    printParam(element);
+    cancelParam();
+}
+function setElementValue(child_node, parent_node, isNumber, element)
+{
+    element.style.backgroundColor = "white";
+    if (parent_node.getAttribute("type") == "Boolean")
+    {
+        if( child_node.checked )
+            parent_node.setAttribute('value', "True");
+        else
+            parent_node.setAttribute('value', "False");
     }
     else
-        input.type = "checkbox";
+    {
+        if( isNumber == true)
+        {
+            if (!(/(^([+-]?)([1-9]+?)[0-9]*$)|^0$/.test(child_node.value))) {
+                if (!(child_node.value == "") && !(child_node.value == "-") && !(child_node.value == "0"))
+                    child_node.value = parent_node.getAttribute('value');
+            }
+            else
+            {
+                if ((/\d+-\d/).test(child_node.value))
+                {
+                    child_node.value = parent_node.getAttribute('value');
+                }
+                if ((/--/).test(child_node.value))
+                  {
+                    child_node.value = child_node.value.replace("--", "-");
+                  }
+            }
+			var max = 2147483647;
+			var min = -2147483648;
+			if (child_node.value > max) child_node.value = parent_node.getAttribute('value');
+			if (child_node.value < min) child_node.value = parent_node.getAttribute('value');
+        }
+        parent_node.setAttribute('value', child_node.value);
+    }
+}
+
+function deleteParam( child_node )
+{
+    child_node.parentNode.removeChild(child_node);
+}
+
+function addParam()
+{
+    document.getElementById("NewParameter").hidden = false;
+    document.getElementById("AddButton").hidden = "hidden";
+    document.getElementById("DownloadButton").hidden = "hidden";
+}
+
+function cancelParam()
+{
+    document.getElementById("NewParameter").hidden = "hidden";
+    document.getElementById("AddButton").hidden = false;
+    document.getElementById("DownloadButton").hidden = false;
+}
+
+function checkData(element)
+{
+    var result = false;
+    if (element.id == "")
+    {
+        result = true;
+    }
+    if (element.name == "")
+    {
+        result = true;
+    }
+    if (element.description == "")
+    {
+        result = true;
+    }
+    if (element.name == "Int32")
+    {
+        element.style.backgroundColor = "white";
+		if (/^0/.test(element.value))
+		{ 	
+			document.getElementById("NewDescription").value = "0";
+            result = true;
+		} 
+		else
+			if (!(/(^([+-]?)([1-9]+?)[0-9]*$)|^0$/.test(element.value)))
+			{
+				if (!child_node.value == "")
+					child_node.value = parent_node.getAttribute('value');
+				result = true;
+			}
+    }
+    return result;
+}
+function changeType()
+{
+    var input = document.getElementById("NewValue");
+    var current_type = document.getElementById("NewType").value;
+    if (current_type == "0")
+    {
+        document.getElementById("NewValue").setAttribute("type", "text");
+        document.getElementById("NewValue").value = "";
+        return;
+    }
+    if (current_type == "1") {
+        document.getElementById("NewValue").setAttribute("type", "text");
+        document.getElementById("NewValue").value = "";
+        
+        input.oninput = validateNumber;
+        return;
+    }
+    else
+    {
+        document.getElementById("NewValue").setAttribute("type", "checkbox");
+        document.getElementById("NewValue").value = "";
+    }
+}
+
+function getTypeFromCombobox()
+{
+    var current_type = document.getElementById("NewType").value;
+    switch (current_type)
+    {
+        case "0":
+            return "String";
+        case "1":
+            return "Int32";
+        case "2":
+            return "Boolean";
+    }
+}
+
+function getNewValue( type ) {
+    switch (type) {
+        case "String":
+        case "Int32":
+        {
+			return document.getElementById("NewValue").value;
+        }
+        case "Boolean":
+        {
+            if (document.getElementById("NewValue").checked)
+            {
+                return "True";
+            }
+            else
+            {
+                return "False";
+            }
+        }
+    }
+}
+
+function generateOutputFile()
+{
+    var content = document.getElementById("Content").getElementsByTagName("p");
+    var xmlStr = "<?xml version=\"1.0\"?>\n";
+    xmlStr += "<Parameters>\n";
+    for (var i = 0; i < content.length; i++)
+    {
+        type = content[i].getAttribute("type");
+        xmlStr += "<Parameter>\n";
+        xmlStr += "<Id>" + content[i].getAttribute("id") + "</Id>\n";
+        xmlStr += "<Name>" + content[i].getAttribute("name") + "</Name>\n";
+        xmlStr += "<Description>" + content[i].getAttribute("description") + "</Description>\n";
+        xmlStr += "<Type>System." + type;
+        xmlStr += "</Type>\n";
+        xmlStr += "<Value>" + content[i].getAttribute("value") + "</Value>\n";
+        xmlStr += "</Parameter>";
+    }
+    xmlStr += "</Parameters>";
+    return xmlStr;
+}
+
+function downloadThis(fileName, type)
+{
+
+    var text = generateOutputFile();
+    var file = new Blob([text], { type: type });
+    var linkToFile = document.getElementById("linkToFile");
+    linkToFile.href = URL.createObjectURL(file);
+    linkToFile.download = fileName;
+    document.getElementById('linkToFile').click();
+}
+
+function checkNumberAfterInput(element) {
+    if (element.value === "-")
+        element.style.backgroundColor = "red";
+    if (element.value === "/")
+        element.style.backgroundColor = "red";
 };
 
-/**
- * Проверяет, ввел ли пользователь целое число и убирает из введенной строки лишние символы.
- */
 function validateNumber() {
     if (this.value === "-")
         return;
-    this.style.backgroundColor = "white";
     if (!/\-?\d+$/.test(this.value)) {
         var substring = this.value.substring(0, this.value.length - 1);
         if (/\-?\d+$/.test(substring))
@@ -187,9 +284,4 @@ function validateNumber() {
         this.value = intValue;
     if (this.value.length > 10)
         this.value = this.value.substring(0, 10);
-};
-
-function checkNumberAfterInput() {
-    if (this.value === "-")
-        this.style.backgroundColor = "red";
 };
